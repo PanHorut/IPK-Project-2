@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
 
     } else {
         Sniffer sniffer;
-        sniffer.start_sniffing(argParser.get_interface(), argParser.get_filter());
+        sniffer.init_sniffer(argParser.get_interface(), argParser.get_filter(), argParser.get_count());
     }
 
     return 0;
