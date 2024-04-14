@@ -23,6 +23,9 @@ class ArgParser {
     int get_count(){
         return this->count;
     }
+
+    std::string format_filter(std::string filter);
+    
         
     private:
         int argc;

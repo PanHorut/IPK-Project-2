@@ -9,7 +9,6 @@
 
 
 int main(int argc, char* argv[]) {
-
     char errbuf[PCAP_ERRBUF_SIZE];
     pcap_if_t* devices = NULL;
 
@@ -33,6 +32,6 @@ int main(int argc, char* argv[]) {
         Sniffer sniffer;
         sniffer.init_sniffer(argParser.get_interface(), argParser.get_filter(), argParser.get_count());
     }
-
+    std::cout << "jeeee" << std::endl;
     return 0;
 }

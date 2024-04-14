@@ -1,4 +1,5 @@
 #include "tools.hpp"
+#include "packet.hpp"
 
 ArgParser::ArgParser(int argc, char *argv[]){
     this->argc = argc;
@@ -62,6 +63,9 @@ void ArgParser::parse_arguments(){
             next_arg = argv[++i];
 
             if(next_arg != NULL && next_arg[0] != '-'){
+                if(port_filter != ""){
+                    port_filter += " and ";
+                }
                 port_filter += "dst port " + std::string(next_arg);
             
             }else{
@@ -73,6 +77,9 @@ void ArgParser::parse_arguments(){
             next_arg = argv[++i];
 
             if(next_arg != NULL && next_arg[0] != '-'){
+                if(port_filter != ""){
+                    port_filter += " and ";
+                }
                 port_filter += "src port " + std::string(next_arg);
             
             }else{
@@ -93,7 +100,7 @@ void ArgParser::parse_arguments(){
 
         }else if(!strcmp(arg, "--ndp")){
             
-            this->filter += "ndp";
+            this->filter += "icmp6 and (icmp6[0] = 135 or icmp6[0] = 136)";
         
         }else if(!strcmp(arg, "--igmp")){
             
@@ -101,7 +108,7 @@ void ArgParser::parse_arguments(){
         
         }else if(!strcmp(arg, "--mld")){
             
-            this->filter += "mld";
+            this->filter += "icmp6 and (icmp6[0] = 130 or icmp6[0] = 131 or icmp6[0] = 132)";
 
         }else if(!strcmp(arg, "-n")){
             next_arg = argv[++i];
@@ -118,10 +125,22 @@ void ArgParser::parse_arguments(){
             return;
         }
 
-        if(i < this->argc - 1 && strcmp(arg, "-i") && strcmp(arg, "--interface") && 
+        if(i < this->argc-1 && strcmp(arg, "-i") && strcmp(arg, "--interface") && 
             strcmp(arg, "-p") && strcmp(arg, "--port-destination") && strcmp(arg, "--port-source") && strcmp(arg, "-n")){
             this->filter += " or ";
         }
 
     }
+    this->filter = format_filter(this->filter);
+}
+
+std::string ArgParser::format_filter(std::string filter){
+
+    if(filter[filter.length()-3] == 'o' && filter[filter.length()-2] == 'r' && filter[filter.length()-4] == ' '){
+        filter = filter.substr(0, filter.length()-4);
+
+    }
+
+    return filter;
+
 }
