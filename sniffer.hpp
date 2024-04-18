@@ -18,6 +18,7 @@
 
 #include <sstream>
 #include <csignal>
+#include <vector>
 
 // For time format
 #include <iomanip>

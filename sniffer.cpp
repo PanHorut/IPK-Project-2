@@ -63,7 +63,7 @@ void Sniffer::start_sniffing(pcap_t* handle, int count){
 void Sniffer::packet_processor(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *packetptr) {
     
     Packet packet;
-    printf("Packet captured\n");
+
     // get timestamp
     struct timeval timestamp = pkthdr->ts;
     time_t time = timestamp.tv_sec;
@@ -76,7 +76,8 @@ void Sniffer::packet_processor(u_char *user, const struct pcap_pkthdr *pkthdr, c
     struct ether_header *eth = (struct ether_header *)packetptr;
     packet.set_src_mac(ether_ntoa((const struct ether_addr *)&eth->ether_shost));
     packet.set_dst_mac(ether_ntoa((const struct ether_addr *)&eth->ether_dhost));
-    //Packet::format_mac(packet.src_mac);
+    packet.set_src_mac(Packet::format_mac(packet.src_mac));
+    packet.set_dst_mac(Packet::format_mac(packet.dst_mac));
 
     // get frame length and print it
     packet.set_frame_len(pkthdr->len);
@@ -228,14 +229,27 @@ char Sniffer::nibbleToHex(unsigned char nibble) {
 }
 
 std::string Packet::format_mac(std::string mac){
-    std::string formatted_mac = "";
-    for (int i = 0; i < mac.length(); i++){
-        if(i % 2 == 0 && i != 0){
-            formatted_mac += ":";
-        }
-        formatted_mac += mac[i];
+    std::string formatted_mac = ""; 
+    std::vector<std::string> tokens;
+    std::stringstream ss(mac);
+
+    // Temporary string to hold each token
+    std::string token;
+
+    // Tokenize the string using ':' as delimiter
+    while (std::getline(ss, token, ':')) {
+        tokens.push_back(token);
     }
-    std::cout << formatted_mac << std::endl;
+
+    // Print the tokens
+    for (auto& t : tokens) {
+        if(t == "0"){
+            formatted_mac += "00:";   
+        }else{
+            formatted_mac += t + ":";   
+        }
+    }
+    return formatted_mac.substr(0, formatted_mac.size() - 1);
 }
 
 void Packet::print_packet(Packet packet){
