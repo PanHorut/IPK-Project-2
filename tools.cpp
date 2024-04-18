@@ -100,7 +100,7 @@ void ArgParser::parse_arguments(){
 
         }else if(!strcmp(arg, "--ndp")){
             
-            this->filter += "icmp6 and (icmp6[0] = 135 or icmp6[0] = 136)";
+            this->filter += "icmp6 and (icmp6[0] = 133 or icmp6[0] = 135 or icmp6[0] = 136)";
         
         }else if(!strcmp(arg, "--igmp")){
             

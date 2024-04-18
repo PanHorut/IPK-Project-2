@@ -14,6 +14,7 @@
 #include <netinet/in.h>
 #include <netinet/ether.h>
 #include <netinet/ip.h>
+#include <netinet/ip6.h>
 
 #include <sstream>
 #include <csignal>
@@ -28,6 +29,10 @@
 class Sniffer{
     public:
         Sniffer();
+
+        static void process_ipv4(struct ip *iph, Packet& packet, const u_char *packetptr);
+
+        static void process_ipv6(struct ip6_hdr *ip6h, Packet& packet, const u_char *packetptr);
 
         static void process_tcp(const u_char *packetptr, Packet& packet);
 

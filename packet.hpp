@@ -10,8 +10,6 @@
 class Packet{
     private:
         std::string timestamp = "";
-        std::string src_mac;
-        std::string dst_mac;
         int frame_len = 0;
         std::string src_ip;
         std::string dst_ip;
@@ -23,6 +21,8 @@ class Packet{
 
         u_int16_t src_port;
         u_int16_t dst_port;
+        std::string src_mac;
+        std::string dst_mac;
 
         Packet();
 
@@ -62,9 +62,10 @@ class Packet{
         void set_byte_offset(std::string byte_offset){
             this->byte_offset = byte_offset;    
         }
+
+        static std::string format_mac(std::string mac);
     
         void print_packet(Packet packet);
-
 
 };
 

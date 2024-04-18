@@ -63,41 +63,64 @@ void Sniffer::start_sniffing(pcap_t* handle, int count){
 void Sniffer::packet_processor(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *packetptr) {
     
     Packet packet;
-  
+    printf("Packet captured\n");
     // get timestamp
     struct timeval timestamp = pkthdr->ts;
     time_t time = timestamp.tv_sec;
     std::tm *gmt_tm = std::gmtime(&time);
     char buffer[80];
     std::strftime(buffer, sizeof(buffer), "%Y-%m-%dT%T%z", gmt_tm);
-
     packet.set_timestamp(std::string(buffer));
 
     // get mac address and print it
     struct ether_header *eth = (struct ether_header *)packetptr;
     packet.set_src_mac(ether_ntoa((const struct ether_addr *)&eth->ether_shost));
     packet.set_dst_mac(ether_ntoa((const struct ether_addr *)&eth->ether_dhost));
-
-    if(linktype == DLT_EN10MB){
-        packetptr += 14;
-    }else if(linktype == DLT_LINUX_SLL){
-        packetptr += 16;
-    }
-
-    // get ip address and print it 
-    struct ip *iph = (struct ip*)packetptr; 
-    packet.set_src_ip(std::string(inet_ntoa(iph->ip_src)));
-    packet.set_dst_ip(std::string(inet_ntoa(iph->ip_dst)));
+    //Packet::format_mac(packet.src_mac);
 
     // get frame length and print it
     packet.set_frame_len(pkthdr->len);
 
-    packetptr += 4*iph->ip_hl;
+    uint16_t ether_type = ntohs(eth->ether_type);
+    
+    if(ether_type == ETHERTYPE_IP){
+
+        struct ip *iph = (struct ip *)(packetptr + sizeof(struct ether_header));
+        process_ipv4(iph, packet, packetptr);
+    
+    }else if (ether_type == ETHERTYPE_IPV6){
+
+        struct ip6_hdr *ip6h = (struct ip6_hdr *)(packetptr + sizeof(struct ether_header));
+        process_ipv6(ip6h, packet, packetptr);
+
+    }else if (ether_type == ETHERTYPE_ARP){
+
+        struct arphdr *arp_hdr = (struct arphdr *)(packetptr + sizeof(struct ether_header));
+        //process_arp(packetptr, packet);
+
+    }else{
+        // Something is wrong if this happens
+    }
+    //packetptr -= 34;
+    int content_len = pkthdr->len;
+    std::string content = Sniffer::read_content(packetptr, content_len);
+    packet.set_byte_offset(content);
+    packet.print_packet(packet);
+
+}
+
+void Sniffer::process_ipv4(struct ip *iph, Packet& packet, const u_char *packetptr){
+
+    // Setting IP addresses
+    packet.set_src_ip(std::string(inet_ntoa(iph->ip_src)));
+    packet.set_dst_ip(std::string(inet_ntoa(iph->ip_dst)));
+    
+    // 14 is size of ethernet header
+    packetptr += (iph->ip_hl * 4) + 14;
     
     switch(iph->ip_p){
         case IPPROTO_TCP:{
             Sniffer::process_tcp(packetptr, packet);
-            
             break;
         }
         case IPPROTO_UDP:{
@@ -110,17 +133,20 @@ void Sniffer::packet_processor(u_char *user, const struct pcap_pkthdr *pkthdr, c
         }
         
     }
-
-    packetptr -= 34;
-
-    //packet.set_byte_offset(content);
-    int content_len = pkthdr->len;
-    std::string content = Sniffer::read_content(packetptr, content_len);
-    packet.set_byte_offset(content);
-    packet.print_packet(packet);
-
-    
 }
+
+void Sniffer::process_ipv6(struct ip6_hdr *ip6h, Packet& packet, const u_char *packetptr){
+
+    // Setting IP addresses
+    char src_ip[INET6_ADDRSTRLEN];
+    char dst_ip[INET6_ADDRSTRLEN];
+    inet_ntop(AF_INET6, &ip6h->ip6_src, src_ip, INET6_ADDRSTRLEN);
+    inet_ntop(AF_INET6, &ip6h->ip6_dst, dst_ip, INET6_ADDRSTRLEN);
+    packet.set_src_ip(std::string(src_ip));
+    packet.set_dst_ip(std::string(dst_ip));
+
+}
+
 
 void Sniffer::process_tcp(const u_char *packetptr, Packet& packet){
     struct tcphdr* tcphdr = (struct tcphdr*)packetptr;
@@ -199,6 +225,17 @@ char Sniffer::nibbleToHex(unsigned char nibble) {
     } else {
         return 'a' + (nibble - 10); // Letters 'A' to 'F'
     }
+}
+
+std::string Packet::format_mac(std::string mac){
+    std::string formatted_mac = "";
+    for (int i = 0; i < mac.length(); i++){
+        if(i % 2 == 0 && i != 0){
+            formatted_mac += ":";
+        }
+        formatted_mac += mac[i];
+    }
+    std::cout << formatted_mac << std::endl;
 }
 
 void Packet::print_packet(Packet packet){
