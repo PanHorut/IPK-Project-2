@@ -1,6 +1,12 @@
 #ifndef TOOLS_HPP
 #define TOOLS_HPP
 
+/**
+ * @file   tools.hpp
+ * @brief  Header file for argument parsing
+ * @author Dominik Horut (xhorut01)
+ */
+
 #include <iostream>
 #include <string>
 #include <string.h>

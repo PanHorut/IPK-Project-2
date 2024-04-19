@@ -1,31 +1,51 @@
+/**
+ * @file   sniffer.cpp
+ * @brief  Implementation of sniffer to receive and process packets 
+ * @author Dominik Horut (xhorut01)
+ */
+
 #include "sniffer.hpp"
 
+/// @brief Constructor of sniffer instance
 Sniffer::Sniffer() {}
+
+/// @brief Constructor of packet instance
 Packet::Packet() {}
 
+/// @brief global variable for link header
 int Sniffer::linktype;
 
+/// @brief global variable just for memory deallocation when SIGINT
 pcap_t* global_handle;
 
+/**
+ * @brief Handles SIGINT
+ * 
+ * @param signal SIGINT signal
+*/
 void sigint_handler(int signal) {
     pcap_close(global_handle);  
     exit(0);      
 }
 
 void Sniffer::init_sniffer(std::string interface, std::string filter, int count){
+
     char errbuf[PCAP_ERRBUF_SIZE];
     pcap_t *handle = NULL;
     struct bpf_program bpf;
     bpf_u_int32 netmask;
     bpf_u_int32 srcip;
     
+    /// registering signal 
     std::signal(SIGINT, sigint_handler);
 
+    /// looking if interface exists
     if (pcap_lookupnet(interface.c_str(), &srcip, &netmask, errbuf) == -1) {
         throw SnifferException("Invalid interface");
         return;
     }
 
+    /// opening interface
     handle = pcap_open_live(interface.c_str(), BUFSIZ, 1, 1000, errbuf);
     global_handle = handle;
 
@@ -58,8 +78,10 @@ void Sniffer::init_sniffer(std::string interface, std::string filter, int count)
         throw SnifferException("Error when setting filter");
         return;
     }
+
     pcap_freecode(&bpf);
 
+    /// Starting to sniff
     start_sniffing(handle, count);
 
     pcap_close(handle);
@@ -67,6 +89,7 @@ void Sniffer::init_sniffer(std::string interface, std::string filter, int count)
 
 void Sniffer::start_sniffing(pcap_t* handle, int count){
 
+    /// Sniffing desired number of packets given by user
     if (pcap_loop(handle, count, &packet_processor, (u_char*)NULL) < 0) {
         pcap_close(handle);
     	throw SnifferException("Pcap loop failed");
@@ -78,7 +101,7 @@ void Sniffer::packet_processor(u_char *user, const struct pcap_pkthdr *pkthdr, c
     
     Packet packet;
 
-    // get timestamp
+    /// Get timestamp
     struct timeval timestamp = pkthdr->ts;
     time_t time = timestamp.tv_sec;
     std::tm *gmt_tm = std::gmtime(&time);
@@ -86,39 +109,46 @@ void Sniffer::packet_processor(u_char *user, const struct pcap_pkthdr *pkthdr, c
     std::strftime(buffer, sizeof(buffer), "%Y-%m-%dT%T%z", gmt_tm);
     packet.set_timestamp(std::string(buffer));
 
-    // get mac address and print it
+    /// Get mac address and format it to desired format
     struct ether_header *eth = (struct ether_header *)packetptr;
     packet.set_src_mac(ether_ntoa((const struct ether_addr *)&eth->ether_shost));
     packet.set_dst_mac(ether_ntoa((const struct ether_addr *)&eth->ether_dhost));
     packet.set_src_mac(Packet::format_mac(packet.src_mac));
     packet.set_dst_mac(Packet::format_mac(packet.dst_mac));
 
-    // get frame length and print it
+    /// Get frame length
     packet.set_frame_len(pkthdr->len);
 
     uint16_t ether_type = ntohs(eth->ether_type);
     
+    /// Processing packet depending on type
+    /// IPv4
     if(ether_type == ETHERTYPE_IP){
 
         struct ip *iph = (struct ip *)(packetptr + sizeof(struct ether_header));
         process_ipv4(iph, packet, packetptr);
     
+    /// IPv6
     }else if (ether_type == ETHERTYPE_IPV6){
 
         struct ip6_hdr *ip6h = (struct ip6_hdr *)(packetptr + sizeof(struct ether_header));
         process_ipv6(ip6h, packet, packetptr);
 
+    /// ARP frame
     }else if (ether_type == ETHERTYPE_ARP) {
-    // Handle ARP frames
         struct ether_arp *arp = (struct ether_arp *)(packetptr + sizeof(struct ether_header));
         process_arp(arp, packet);
+
     }else{
         throw SnifferException("Unexpected ether type");
     }
 
+    /// Reading byte payload
     int content_len = pkthdr->len;
     std::string content = Sniffer::read_content(packetptr, content_len, packet);
     packet.set_byte_offset(content);
+
+    /// Printing processed packet
     packet.print_packet(packet);
 
 }
@@ -129,18 +159,25 @@ void Sniffer::process_ipv4(struct ip *iph, Packet& packet, const u_char *packetp
     packet.set_src_ip(std::string(inet_ntoa(iph->ip_src)));
     packet.set_dst_ip(std::string(inet_ntoa(iph->ip_dst)));
     
-    // 14 is size of ethernet header
-    packetptr += (iph->ip_hl * 4) + 14;
     
+    packetptr += (iph->ip_hl * 4) + 14; /// adding 14 which is size of ethernet header
+    
+    /// Depending on protocol, packet is processed
     switch(iph->ip_p){
+
+        /// TCP
         case IPPROTO_TCP:{
             Sniffer::process_tcp(packetptr, packet);
             break;
         }
+
+        /// UDP
         case IPPROTO_UDP:{
             Sniffer::process_udp(packetptr, packet);
             break;
         }
+
+        /// ICMP
         case IPPROTO_ICMP:{
             Sniffer::process_icmp(packetptr, packet);
             break;
@@ -150,13 +187,16 @@ void Sniffer::process_ipv4(struct ip *iph, Packet& packet, const u_char *packetp
 }
 
 void Sniffer::process_ipv6(struct ip6_hdr *ip6h, Packet& packet, const u_char *packetptr){
-    // Setting IP addresses
+    
+    /// Setting IP addresses
     char src_ip[INET6_ADDRSTRLEN];
     char dst_ip[INET6_ADDRSTRLEN];
     inet_ntop(AF_INET6, &ip6h->ip6_src, src_ip, INET6_ADDRSTRLEN);
     inet_ntop(AF_INET6, &ip6h->ip6_dst, dst_ip, INET6_ADDRSTRLEN);
     packet.set_src_ip(std::string(src_ip));
     packet.set_dst_ip(std::string(dst_ip));
+
+    /// Setting ports
     packet.set_src_port(0);
     packet.set_dst_port(0);
 
@@ -164,23 +204,29 @@ void Sniffer::process_ipv6(struct ip6_hdr *ip6h, Packet& packet, const u_char *p
 
 void Sniffer::process_arp(ether_arp *arp, Packet& packet){
 
+    /// Setting IP addresses
     struct in_addr src_ip_addr, dst_ip_addr;
+
     memcpy(&src_ip_addr, arp->arp_spa, sizeof(src_ip_addr));
     memcpy(&dst_ip_addr, arp->arp_tpa, sizeof(dst_ip_addr));
 
     char src_ip_str[INET_ADDRSTRLEN];
     char dst_ip_str[INET_ADDRSTRLEN];
+
     inet_ntop(AF_INET, &src_ip_addr, src_ip_str, INET_ADDRSTRLEN);
     inet_ntop(AF_INET, &dst_ip_addr, dst_ip_str, INET_ADDRSTRLEN);
 
     packet.set_src_ip(src_ip_str);
     packet.set_dst_ip(dst_ip_str);
 
+    /// Setting ports
     packet.set_src_port(0);
     packet.set_dst_port(0);
 }
 
 void Sniffer::process_tcp(const u_char *packetptr, Packet& packet){
+
+    /// Getting TCP header and ports
     struct tcphdr* tcphdr = (struct tcphdr*)packetptr;
     packet.set_src_port(ntohs(tcphdr->th_sport));
     packet.set_dst_port(ntohs(tcphdr->th_dport));
@@ -188,13 +234,16 @@ void Sniffer::process_tcp(const u_char *packetptr, Packet& packet){
 }
 
 void Sniffer::process_udp(const u_char *packetptr, Packet& packet){
+
+    /// Getting UDP header and ports
     struct udphdr* udphdr = (struct udphdr*)packetptr;
     packet.set_src_port(ntohs(udphdr->uh_sport));
     packet.set_dst_port(ntohs(udphdr->uh_dport));
 }
 
 void Sniffer::process_icmp(const u_char *packetptr, Packet& packet){
-    //struct icmphdr* icmphdr = (struct icmphdr*)packetptr;
+    
+    /// Setting ports
     packet.set_src_port(0);
     packet.set_dst_port(0);
 }
@@ -203,7 +252,11 @@ std::string Sniffer::read_content(const u_char *packetptr, int length, Packet& p
     std::string content = "\n";
     int offset = 0;
     int len_to_read;   
+
+    /// Reading until we read whole payload by 16 bytes a line
     while(0 < length){
+
+        /// Last line can be shorter
         if(length < 16){
             len_to_read = length;
 
@@ -211,11 +264,13 @@ std::string Sniffer::read_content(const u_char *packetptr, int length, Packet& p
             len_to_read = 16;
         }
 
+        /// Read 16 bytes from payload
         content = read_offset_line(packetptr, content, offset, len_to_read, packet);
         content.append("\n");   
         length -= len_to_read;
+
+        /// Move pointer to payload to next 16 bytes
         offset += 16;
-        
     }
     
     return content;
@@ -226,36 +281,46 @@ std::string Sniffer::read_offset_line(const u_char *packetptr, std::string& cont
     std::stringstream ss;
     ss << std::hex << std::setfill('0') << std::setw(4) << packet.content_len;
     content.append(ss.str() + ": ");
+
+    /// Incrementing line counter
     packet.content_len += 16;
 
+    /// Getting HEX representation of payload
     for (int i = 0; i < len_to_read; i++){
         unsigned char c = (unsigned char) packetptr[i + offset];
-    
-        content.push_back(nibbleToHex((c >> 4) & 0xF)); // High nibble
+
+        /// Transforming payload to desired HEX format
+        content.push_back(nibbleToHex((c >> 4) & 0xF));
         content.push_back(nibbleToHex(c & 0xF)); 
         content.append(" ");
     
     }
 
+    /// Aligning last line of payload
     if(len_to_read != 16){
     
         int i = (16 - len_to_read)*3;
         while(i){
            
             content.append(" ");
-          
             i--;
         }
     }
     content.append(" ");
     
-    
+    /// Getting ASCII representation of payload
     for (int i = 0; i < len_to_read; i++){
         unsigned char c = (unsigned char) packetptr[i + offset];
+
+        /// Adding gap after each 8 bytes
         if(i == 8)
             content.append(" ");
+        
+        /// Is printable ASCII character
         if(isPrintable(c))
             content.push_back(c);
+
+        /// Not printable ASCII character substituted by dot
         else
             content.push_back('.');
     
@@ -268,6 +333,8 @@ bool Sniffer::isPrintable(char c) {
 }
 
 char Sniffer::nibbleToHex(unsigned char nibble) {
+
+    /// Getting correct HEX format
     if (nibble < 10) {
         return '0' + nibble; // Digits '0' to '9'
     } else {
@@ -282,10 +349,12 @@ std::string Packet::format_mac(std::string mac){
 
     std::string token;
 
+    /// Spliting MAC address into tokens 
     while (std::getline(ss, token, ':')) {
         tokens.push_back(token);
     }
 
+    /// Transforming numbers to correct format if necessary
     for (auto& t : tokens) {
         if(t == "0"){
             formatted_mac += "00:";   
@@ -332,6 +401,7 @@ void Packet::print_packet(Packet packet){
     std::cout << "dst MAC: " << dst_mac << std::endl;
     std::cout << "frame length: " << frame_len << std::endl;
 
+    /// IP is not set
     if(src_ip == ""){
         src_ip = "-";
     }
@@ -343,12 +413,14 @@ void Packet::print_packet(Packet packet){
     std::cout << "src IP: " << src_ip << std::endl;
     std::cout << "dst IP: " << dst_ip << std::endl;
 
+    /// Src port is not set
     if(src_port == 0){
         std::cout << "src port: -" << std::endl;
     }else{
         std::cout << "src port: " << src_port << std::endl;
     }
 
+    /// Dst port is not set
     if(dst_port == 0){
         std::cout << "dst port: -" << std::endl;
     }else{

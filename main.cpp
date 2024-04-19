@@ -1,3 +1,9 @@
+/**
+ * @file   main.cpp
+ * @brief  Main
+ * @author Dominik Horut (xhorut01)
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -9,12 +15,14 @@
 #include "exception.hpp"
 
 int main(int argc, char* argv[]) {
+
     char errbuf[PCAP_ERRBUF_SIZE];
     pcap_if_t* devices = NULL;
 
     ArgParser argParser(argc, argv);
 
     try{
+        /// Parse arguments
         argParser.parse_arguments();
 
     }catch(const std::exception& e) {
@@ -22,6 +30,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    /// Print all available interfaces if no interface is provided by user
     if(argParser.get_interface() == ""){
 
         if (pcap_findalldevs(&devices, errbuf)) {
@@ -36,15 +45,16 @@ int main(int argc, char* argv[]) {
 
         pcap_freealldevs(devices);
 
+    /// Sniff for desired packets
     } else {
         Sniffer sniffer;
 
         try{
-        sniffer.init_sniffer(argParser.get_interface(), argParser.get_filter(), argParser.get_count());
+            sniffer.init_sniffer(argParser.get_interface(), argParser.get_filter(), argParser.get_count());
 
         } catch(const std::exception& e) {
-        std::cout << "Sniffer error: " << e.what() << std::endl;
-        return 1;
+            std::cerr << "Sniffer error: " << e.what() << std::endl;
+            return 1;
         }
     }
     return 0;

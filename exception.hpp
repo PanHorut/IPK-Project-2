@@ -1,6 +1,12 @@
 #ifndef EXCEPTION_HPP
 #define EXCEPTION_HPP
 
+/**
+ * @file   exception.hpp
+ * @brief  Header file for using exception 
+ * @author Dominik Horut (xhorut01)
+ */
+
 #include <iostream>
 #include <exception>
 

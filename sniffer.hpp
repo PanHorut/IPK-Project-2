@@ -1,6 +1,12 @@
 #ifndef SNIFFER_HPP
 #define SNIFFER_HPP
 
+/**
+ * @file   sniffer.hpp
+ * @brief  Header file of sniffer
+ * @author Dominik Horut (xhorut01)
+ */
+
 #include <iostream>
 #include <stdio.h>
 #include <string>
@@ -151,8 +157,7 @@ class Sniffer{
         /**
          * @brief Packet processor function for pcap_loop.
          * 
-         * This function is used as the packet processor for pcap_loop.
-         * It is responsible for processing each captured packet.
+         * This function is responsible for processing each captured packet.     
          * 
          * @param user User-defined data passed to pcap_loop.
          * @param pkthdr Pointer to the pcap_pkthdr struct representing the packet header.

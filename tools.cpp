@@ -1,3 +1,9 @@
+/**
+ * @file   tools.cpp
+ * @brief  Implementation of argument parsing and creating filter
+ * @author Dominik Horut (xhorut01)
+ */
+
 #include "tools.hpp"
 #include "packet.hpp"
 
@@ -8,19 +14,22 @@ ArgParser::ArgParser(int argc, char *argv[]){
 
 void ArgParser::parse_arguments(){
 
+    /// No arguments are provided
     if (this->argc <= 1){
         throw SnifferException("No arguments provided");
         return;
     }
 
+    /// Filter to be created
     std::string port_filter;
 
-    // Loop through each argument
+    /// Loop through each argument
     for (int i = 1; i < this->argc; i++){
         char* arg = argv[i];
         char* next_arg;
         
         
+        /// Getting interface
         if(!strcmp(arg, "-i") || !strcmp(arg, "--interface")){
             next_arg = argv[++i];
             
@@ -31,6 +40,7 @@ void ArgParser::parse_arguments(){
                 return;
             }
         
+        /// TCP to be filtered
         }else if(!strcmp(arg, "-t") || !strcmp(arg, "--tcp")){
 
                 if(port_filter != ""){
@@ -40,6 +50,7 @@ void ArgParser::parse_arguments(){
                     this->filter += "tcp";
                 }
         
+        /// UDP to be filtered
         }else if(!strcmp(arg, "-u") || !strcmp(arg, "--udp")){
             
                 if(port_filter != ""){
@@ -49,6 +60,7 @@ void ArgParser::parse_arguments(){
                     this->filter += "udp";
                 }
         
+        /// Specify port 
         }else if(!strcmp(arg, "-p")){
             next_arg = argv[++i];
 
@@ -87,6 +99,8 @@ void ArgParser::parse_arguments(){
                 throw SnifferException("No port provided");
                 return;
             }
+
+        /// Specify packets
         }else if(!strcmp(arg, "--icmp4")){
             
             this->filter += "icmp";
@@ -126,18 +140,19 @@ void ArgParser::parse_arguments(){
             return;
         }
 
+        /// To correctly format filter
         if(i < this->argc-1 && strcmp(arg, "-i") && strcmp(arg, "--interface") && 
             strcmp(arg, "-p") && strcmp(arg, "--port-destination") && strcmp(arg, "--port-source") && strcmp(arg, "-n")){
             this->filter += " or ";
         }
-
     }
-    this->filter = format_filter(this->filter);
 
+    this->filter = format_filter(this->filter);
 }
 
 std::string ArgParser::format_filter(std::string filter){
 
+    /// Final touch to create perfect filter
     if(filter[filter.length()-3] == 'o' && filter[filter.length()-2] == 'r' && filter[filter.length()-4] == ' '){
         filter = filter.substr(0, filter.length()-4);
 
