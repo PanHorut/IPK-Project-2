@@ -9,11 +9,12 @@ ArgParser::ArgParser(int argc, char *argv[]){
 void ArgParser::parse_arguments(){
 
     if (this->argc <= 1){
-        std::cout << "No arguments provided." << std::endl;
+        throw SnifferException("No arguments provided");
         return;
     }
 
     std::string port_filter;
+
     // Loop through each argument
     for (int i = 1; i < this->argc; i++){
         char* arg = argv[i];
@@ -55,7 +56,7 @@ void ArgParser::parse_arguments(){
                 port_filter += "port " + std::string(next_arg);
             
             }else{
-                std::cout << "No port provided." << std::endl;
+                throw SnifferException("No port provided");
                 return;
             }
 
@@ -69,7 +70,7 @@ void ArgParser::parse_arguments(){
                 port_filter += "dst port " + std::string(next_arg);
             
             }else{
-                std::cout << "No destination port provided." << std::endl;
+                throw SnifferException("No destination port provided");
                 return;
             }
 
@@ -83,7 +84,7 @@ void ArgParser::parse_arguments(){
                 port_filter += "src port " + std::string(next_arg);
             
             }else{
-                std::cout << "No port provided." << std::endl;
+                throw SnifferException("No port provided");
                 return;
             }
         }else if(!strcmp(arg, "--icmp4")){
@@ -117,11 +118,11 @@ void ArgParser::parse_arguments(){
                 this->count = atoi(next_arg);
             
             }else{
-                std::cout << "No count provided provided." << std::endl;
+                throw SnifferException("No -n value provided");
                 return;
             }
         }else{
-            std::cout << "Invalid argument: " << arg << std::endl;
+            throw SnifferException("Invalid argument");
             return;
         }
 
@@ -132,6 +133,7 @@ void ArgParser::parse_arguments(){
 
     }
     this->filter = format_filter(this->filter);
+
 }
 
 std::string ArgParser::format_filter(std::string filter){

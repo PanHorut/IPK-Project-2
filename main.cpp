@@ -6,15 +6,21 @@
 
 #include "sniffer.hpp"
 #include "tools.hpp"
-
+#include "exception.hpp"
 
 int main(int argc, char* argv[]) {
     char errbuf[PCAP_ERRBUF_SIZE];
     pcap_if_t* devices = NULL;
 
-
     ArgParser argParser(argc, argv);
-    argParser.parse_arguments();
+
+    try{
+        argParser.parse_arguments();
+
+    }catch(const std::exception& e) {
+        std::cout << "Argument error: " << e.what() << std::endl;
+        return 1;
+    }
 
     if(argParser.get_interface() == ""){
 
@@ -28,9 +34,18 @@ int main(int argc, char* argv[]) {
             std::cout << device->name << std::endl;
         }
 
+        pcap_freealldevs(devices);
+
     } else {
         Sniffer sniffer;
+
+        try{
         sniffer.init_sniffer(argParser.get_interface(), argParser.get_filter(), argParser.get_count());
+
+        } catch(const std::exception& e) {
+        std::cout << "Sniffer error: " << e.what() << std::endl;
+        return 1;
+        }
     }
     return 0;
 }
