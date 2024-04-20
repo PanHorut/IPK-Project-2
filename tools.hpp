@@ -56,12 +56,7 @@ class ArgParser {
         return this->count;
     }
 
-    /**
-     * @brief Formats the filter string to be accepted by pcap_compile.
-     * @param filter The filter string to be formatted.
-     * @return The formatted filter string.
-     */
-    std::string format_filter(std::string filter);
+    
     
         
     private:
@@ -70,6 +65,13 @@ class ArgParser {
         char** argv;
         std::string filter = ""; 
         std::string interface;
+
+    /**
+     * @brief Formats the filter string to be accepted by pcap_compile.
+     * @param filter The filter string to be formatted.
+     * @return The formatted filter string.
+     */
+    std::string format_filter(std::string filter);
 };
 
 #endif

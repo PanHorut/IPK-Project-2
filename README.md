@@ -1,8 +1,32 @@
 # IPK Project 2 - ZETA: Network sniffer
 Author: Dominik Horut (xhorut01) 
 
+## Table of contents
+1. [Introduction](#introduction)
+2. [Brief theory](#brief-theory)
+3. [Usage of sniffer](#usage-of-sniffer)
+4. [Processing of the arguments](#processing-of-the-arguments)
+5. [Main function](#main-function)
+6. [Testing](#testing)
+7. [Sniffer](#sniffer)
+8. [Packet](#packet)
+9. [Error handling](#error-handling)
+10. [Whole program structure UML class diagram](#whole-program-structure-uml-class-diagram)
+11. [Testing](#testing)
+12. [License](#license)
+13. [Code documentation](#code-documentation)
+14. [Bibliogrphy](#bibliography)
+
 ## Introduction
 The aim of this project was to create network sniffer able to capture and display different types of packets. The entire project is written in C++ using C++20 standard, witch compilation facilitated by Makefile
+
+## Brief theory
+Sniffer is capable of capturing different protocol data units.
+Therefore, it captures segments (TCP), datagrams (UDP) and packets (ICMP4, ICMP6, IGMP, NDP and MLD) and also frames (ARP).
+The difference between each PDU depends on the layer they are in:
+* **Segment** is PDU of transport layer and contains source and destination port
+* **Datagram** and packets is PDU of network layer and contains source and destination IP addresses
+* **Frame** is PDU of data-link layer and contains source and destination MAC addresses
 
 ## Usage of sniffer
 The project can be compiled by command `make`, which creates executable `ipk-sniffer`. The sniffer itself can be run using the following command:<br>
@@ -45,10 +69,13 @@ Network packet itself is represented by class `Packet`, which has all possible a
 ## Error handling
 For handling errors, exceptions are used. The exception is represented by class `SnifferException`. When `SIGINT` signal occurs, it is handled by `sigint_handler()` method, which frees allocated memory prints the description and cause of an error and exits.
 
-## Testing
-For testing, student tests combined with my own tester were used. Every output from sniffer was compared to Wireshark output, used as reference. Valgrind was also used to ensure correct work with memory.
+## Whole program structure UML class diagram
+![tcp](./img/uml.png)
 
-#### Available interfaces test
+## Testing
+For testing, student tests combined with my own tests were used. My own testing was done by comparing every output from sniffer to Wireshark output, used as reference. Valgrind was also used to ensure correct work with memory.
+
+### Available interfaces test
 CLI input:<br>
 ``` sudo ./ipk-sniffer -i ```<br>
 Sniffer output:<br>
@@ -65,7 +92,7 @@ nfqueue
 dbus-system
 dbus-session
 ```
-#### Invalid interface test
+### Invalid interface test
 CLI input:<br>
 ```sudo ./ipk-sniffer -i ipk```<br>
 
@@ -73,7 +100,7 @@ Sniffer output:<br>
 ```
 Sniffer error: Invalid interface
 ```
-#### TCP with specified port test
+### TCP with specified port test
 CLI input:<br>
 `sudo ./ipk-sniffer -i wlp2s0 -p 48 --tcp`<br>
 Sniffer output:<br>
@@ -97,7 +124,7 @@ dst port: 48
 Wireshark output:<br>
 ![tcp_port](./img/tcp_port.png)
 
-#### UDP with specified destination port test
+### UDP with specified destination port test
 CLI input:<br>
 `sudo ./ipk-sniffer -i lo --port-destination 84`<br>
 Sniffer output:<br>
@@ -118,7 +145,7 @@ dst port: 84
 Wireshark output:<br>
 ![udp_dest](./img/udp_dest.png)
 
-#### UDP with specified source port test
+### UDP with specified source port test
 CLI input:<br>
 `sudo ./ipk-sniffer -i lo --port-source 420`<br>
 Sniffer output:<br>
@@ -139,7 +166,7 @@ dst port: 25
 Wireshark output:<br>
 ![udp_src](./img/udp_src.png)
 
-#### ICMP4 test
+### ICMP4 test
 CLI input:<br>
 `sudo ./ipk-sniffer -i lo --icmp4`<br>
 Sniffer output:<br>
@@ -161,7 +188,7 @@ dst port: -
 Wireshark output:<br>
 ![icmp4](./img/icmp4.png)
 
-#### ICMP6 test
+### ICMP6 test
 CLI input:<br>
 `sudo ./ipk-sniffer -i lo --icmp6`<br>
 Sniffer output:<br>
@@ -183,7 +210,7 @@ dst port: -
 Wireshark output:<br>
 ![icmp6](./img/icmp6.png)
 
-#### ARP test
+### ARP test
 CLI input:<br>
 `sudo ./ipk-sniffer -i wlp2s0 --arp`<br>
 Sniffer output:<br>
@@ -204,7 +231,7 @@ dst port: -
 Wireshark output:<br>
 ![arp](./img/arp.png)
 
-#### NDP test
+### NDP test
 CLI input:<br>
 `sudo ./ipk-sniffer -i wlp2s0 --ndp`<br>
 Sniffer output:<br>
@@ -228,7 +255,7 @@ dst port: -
 Wireshark output:<br>
 ![arp](./img/ndp.png)
 
-#### MLD test
+### MLD test
 CLI input:<br>
 `sudo ./ipk-sniffer -i wlp2s0 --mld`<br>
 Sniffer output:<br>
@@ -251,9 +278,9 @@ dst port: -
 Wireshark output:<br>
 ![arp](./img/mld.png)
 
-#### Valgrind test
+### Valgrind test
 CLI input:<br>
-`sudo valgrind ./ipk-sniffer -i wlp2s0 --mld`
+`sudo valgrind ./ipk-sniffer -i wlp2s0 --mld`<br>
 Sniffer output:<br>
 ```
 ==55341== Memcheck, a memory error detector
@@ -287,7 +314,7 @@ dst port: -
 ==55341== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
 ```
 
-#### Valgrind SIGINT test
+### Valgrind SIGINT test
 ```
 ==55430== Memcheck, a memory error detector
 ==55430== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
@@ -305,7 +332,7 @@ dst port: -
 ==55430== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
 ```
 
-#### Argument parsing error test
+### Argument parsing error test
 CLI input:<br>
 `sudo valgrind ./ipk-sniffer -i wlp2s0 -p --tcp`
 
@@ -313,6 +340,20 @@ CLI output:<br>
 ```dominik@dominik-Aspire-E5-553G:~/IPK/IPK-Project-2$ sudo ./ipk-sniffer -i wlp2s0 - p --tcp
 Argument error: Invalid argument
 ```
+
+## License
+This code is licensed under the GNU General Public License v3.0. For more information, see the LICENSE file in the root directory of the project.
+
+## Code documentation
+The whole program is documented using Doxygen annotations. Documentation can be generated running this command:<br>
+`doxygen Doxyfile`
+
+## Bibliography
+1. GeeksforGeeks: Difference between Segments, Packets, and Frames, babayaga2 [online]. Available at: https://www.geeksforgeeks.org/difference-between-segments-packets-and-frames/
+2. Programming with PCAP, Carstens T. [online]. Available at: https://www.tcpdump.org/pcap.html
+3. Project 2 - ZETA: Network sniffer [online]. Available at: https://git.fit.vutbr.cz/NESFIT/IPK-Projects-2024/src/branch/master/Project%202/zeta
+4. Develop a Packet Sniffer with Libpcap [online]. Available at: https://vichargrave.github.io/programming/develop-a-packet-sniffer-with-libpcap/
+
 
 
 

@@ -47,6 +47,34 @@ class Sniffer{
         Sniffer();
 
         /**
+         * @brief Initializes the sniffer with the specified interface, filter, and packet count.
+         * 
+         * This method initializes the sniffer with the specified interface, filter, and packet count.
+         * 
+         * @param interface The network interface to sniff on.
+         * @param filter The filter expression to apply to captured packets.
+         * @param count The maximum number of packets to capture.
+         */
+        void init_sniffer(std::string interface, std::string filter, int count);
+
+        /**
+         * @brief The link type of the captured packets.
+         */
+        static int linktype;
+
+
+    private:
+        /**
+         * @brief Starts the sniffing process using the specified pcap handle and packet count.
+         * 
+         * This method starts the sniffing process using the specified pcap handle and packet count.
+         * 
+         * @param handle The pcap handle to use for capturing packets.
+         * @param count The maximum number of packets to capture.
+         */
+        void start_sniffing(pcap_t* handle, int count);
+
+        /**
          * @brief Processes the IPv4 packet.
          * 
          * This method is responsible for processing the IPv4 packet and extracting relevant information.
@@ -164,32 +192,6 @@ class Sniffer{
          * @param packet Pointer to the start of the packet data.
          */
         static void packet_processor(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *packet);
-
-        /**
-         * @brief Initializes the sniffer with the specified interface, filter, and packet count.
-         * 
-         * This method initializes the sniffer with the specified interface, filter, and packet count.
-         * 
-         * @param interface The network interface to sniff on.
-         * @param filter The filter expression to apply to captured packets.
-         * @param count The maximum number of packets to capture.
-         */
-        void init_sniffer(std::string interface, std::string filter, int count);
-
-        /**
-         * @brief Starts the sniffing process using the specified pcap handle and packet count.
-         * 
-         * This method starts the sniffing process using the specified pcap handle and packet count.
-         * 
-         * @param handle The pcap handle to use for capturing packets.
-         * @param count The maximum number of packets to capture.
-         */
-        void start_sniffing(pcap_t* handle, int count);
-
-        /**
-         * @brief The link type of the captured packets.
-         */
-        static int linktype;
 
 };
 
