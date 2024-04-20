@@ -20,7 +20,7 @@ Author: Dominik Horut (xhorut01)
 ## Introduction
 The aim of this project was to create network sniffer able to capture and display different types of packets. The entire project is written in C++ using C++20 standard, witch compilation facilitated by Makefile
 
-## Brief theory
+## Brief theory<sup>[1]</sup>
 Sniffer is capable of capturing different protocol data units.
 Therefore, it captures segments (TCP), datagrams (UDP) and packets (ICMP4, ICMP6, IGMP, NDP and MLD) and also frames (ARP).
 The difference between each PDU depends on the layer they are in:
@@ -28,11 +28,12 @@ The difference between each PDU depends on the layer they are in:
 * **Datagram** and packets is PDU of network layer and contains source and destination IP addresses
 * **Frame** is PDU of data-link layer and contains source and destination MAC addresses
 
+
 ## Usage of sniffer
 The project can be compiled by command `make`, which creates executable `ipk-sniffer`. The sniffer itself can be run using the following command:<br>
 `./ipk-sniffer [-i interface | --interface interface] {-p|--port-source|--port-destination port [--tcp|-t] [--udp|-u]} [--arp] [--ndp] [--icmp4] [--icmp6] [--igmp] [--mld] {-n num}`
 
-The meaning of each argument is described in the table below:<br>
+The meaning of each argument is described in the table<sup>[3]</sup> below:<br>
 | Argument          | Value | Meaning
 |-------------------|---------|-------|
 | `-i` or `--interface` | interface or no value | sniff on provided interface (interface given) or list all available interfaces (no value given)|
@@ -73,7 +74,7 @@ For handling errors, exceptions are used. The exception is represented by class 
 ![tcp](./img/uml.png)
 
 ## Testing
-For testing, student tests combined with my own tests were used. My own testing was done by comparing every output from sniffer to Wireshark output, used as reference. Valgrind was also used to ensure correct work with memory.
+For testing, student tests<sup>[5]</sup> combined with my own tests were used. My own testing was done by comparing every output from sniffer to Wireshark output, used as reference. Valgrind was also used to ensure correct work with memory. The packets were send with Python script `sender.py` using Scapy library, where each packet type has its own `send()` function 
 
 ### Available interfaces test
 CLI input:<br>
@@ -353,7 +354,12 @@ The whole program is documented using Doxygen annotations. Documentation can be 
 2. Programming with PCAP, Carstens T. [online]. Available at: https://www.tcpdump.org/pcap.html
 3. Project 2 - ZETA: Network sniffer [online]. Available at: https://git.fit.vutbr.cz/NESFIT/IPK-Projects-2024/src/branch/master/Project%202/zeta
 4. Develop a Packet Sniffer with Libpcap [online]. Available at: https://vichargrave.github.io/programming/develop-a-packet-sniffer-with-libpcap/
+5. Basic Python tests for IPK 2nd project - Sniffer, Jakub Jerabek.Available at: https://git.fit.vutbr.cz/xjerab28/IPK-Sniffer-Tests
 
+
+[1]: https://www.geeksforgeeks.org/difference-between-segments-packets-and-frames/
+[3]: https://git.fit.vutbr.cz/NESFIT/IPK-Projects-2024/src/branch/master/Project%202/zeta
+[5]: https://git.fit.vutbr.cz/xjerab28/IPK-Sniffer-Tests
 
 
 
