@@ -159,7 +159,6 @@ void Sniffer::process_ipv4(struct ip *iph, Packet& packet, const u_char *packetp
     packet.set_src_ip(std::string(inet_ntoa(iph->ip_src)));
     packet.set_dst_ip(std::string(inet_ntoa(iph->ip_dst)));
     
-    
     packetptr += (iph->ip_hl * 4) + 14; /// adding 14 which is size of ethernet header
     
     /// Depending on protocol, packet is processed
@@ -167,19 +166,27 @@ void Sniffer::process_ipv4(struct ip *iph, Packet& packet, const u_char *packetp
 
         /// TCP
         case IPPROTO_TCP:{
+            packet.set_type("TCP");
             Sniffer::process_tcp(packetptr, packet);
             break;
         }
 
         /// UDP
         case IPPROTO_UDP:{
+            packet.set_type("UDP");
             Sniffer::process_udp(packetptr, packet);
             break;
         }
 
         /// ICMP
         case IPPROTO_ICMP:{
+            packet.set_type("ICMPv4");
             Sniffer::process_icmp(packetptr, packet);
+            break;
+        }
+
+        case IPPROTO_IGMP:{
+            packet.set_type("IGMP");
             break;
         }
         
@@ -199,6 +206,31 @@ void Sniffer::process_ipv6(struct ip6_hdr *ip6h, Packet& packet, const u_char *p
     /// Setting ports
     packet.set_src_port(0);
     packet.set_dst_port(0);
+
+    /// Checking if it is NDP or MLD or none
+    if (ip6h->ip6_nxt == IPPROTO_ICMPV6) {
+        
+        struct icmp6_hdr *icmp6h = (struct icmp6_hdr *)((char *)ip6h + sizeof(struct ip6_hdr));
+        packet.set_type("ICMPv6");
+
+        switch (icmp6h->icmp6_type) {
+            case ND_ROUTER_SOLICIT:
+            case ND_ROUTER_ADVERT:
+            case ND_NEIGHBOR_SOLICIT:
+            case ND_NEIGHBOR_ADVERT:
+
+                packet.set_type("ICMPv6 NDP");
+                break;
+            case MLD_LISTENER_QUERY:
+            case MLD_LISTENER_REPORT:
+
+                packet.set_type("ICMPv6 MLD");
+                break;
+            default:
+        
+                break;
+        }
+    }
 
 }
 
@@ -222,6 +254,8 @@ void Sniffer::process_arp(ether_arp *arp, Packet& packet){
     /// Setting ports
     packet.set_src_port(0);
     packet.set_dst_port(0);
+
+    packet.set_type("ARP");
 }
 
 void Sniffer::process_tcp(const u_char *packetptr, Packet& packet){
@@ -396,6 +430,10 @@ std::string Packet::format_mac(std::string mac){
 }
 
 void Packet::print_packet(Packet packet){
+    
+    if(type != ""){
+        std::cout << "type: " << type << std::endl;
+    }
     std::cout << "timestamp: " << timestamp << std::endl;
     std::cout << "src MAC: " << src_mac << std::endl;
     std::cout << "dst MAC: " << dst_mac << std::endl;
@@ -425,6 +463,6 @@ void Packet::print_packet(Packet packet){
         std::cout << "dst port: -" << std::endl;
     }else{
         std::cout << "dst port: " << dst_port << std::endl;
-    }
+    }  
     std::cout << byte_offset << std::endl;
 }

@@ -24,6 +24,7 @@ class Packet{
         std::string src_ip;
         std::string dst_ip;
         std::string byte_offset = "";
+        std::string type= "";
 
     public:
 
@@ -109,6 +110,14 @@ class Packet{
         */
         void set_byte_offset(std::string byte_offset){
             this->byte_offset = byte_offset;    
+        }
+
+        /**
+         * @brief Setter of type
+         * @param type type to be set
+        */
+        void set_type(std::string type){
+            this->type = type;
         }
 
         /**

@@ -106,6 +106,7 @@ CLI input:<br>
 `sudo ./ipk-sniffer -i wlp2s0 -p 48 --tcp`<br>
 Sniffer output:<br>
 ```
+type: TCP
 timestamp: 2024-04-19T19:51:44+0000
 src MAC: 00:00:00:00:00:00
 dst MAC: ff:ff:ff:ff:ff:ff
@@ -130,6 +131,7 @@ CLI input:<br>
 `sudo ./ipk-sniffer -i lo --port-destination 84`<br>
 Sniffer output:<br>
 ```
+type: UDP
 timestamp: 2024-04-19T19:58:51+0000
 src MAC: 00:00:00:00:00:00
 dst MAC: ff:ff:ff:ff:ff:ff
@@ -151,6 +153,7 @@ CLI input:<br>
 `sudo ./ipk-sniffer -i lo --port-source 420`<br>
 Sniffer output:<br>
 ```
+type: UDP
 timestamp: 2024-04-19T20:04:59+0000
 src MAC: 00:00:00:00:00:00
 dst MAC: ff:ff:ff:ff:ff:ff
@@ -172,6 +175,7 @@ CLI input:<br>
 `sudo ./ipk-sniffer -i lo --icmp4`<br>
 Sniffer output:<br>
 ```
+type: ICMPv4
 timestamp: 2024-04-19T20:08:35+0000
 src MAC: 00:00:00:00:00:00
 dst MAC: ff:ff:ff:ff:ff:ff
@@ -194,6 +198,7 @@ CLI input:<br>
 `sudo ./ipk-sniffer -i lo --icmp6`<br>
 Sniffer output:<br>
 ```
+type: ICMPv6
 timestamp: 2024-04-19T20:14:15+0000
 src MAC: 00:00:00:00:00:00
 dst MAC: ff:ff:ff:ff:ff:ff
@@ -216,6 +221,7 @@ CLI input:<br>
 `sudo ./ipk-sniffer -i wlp2s0 --arp`<br>
 Sniffer output:<br>
 ```
+type: ARP
 timestamp: 2024-04-19T20:18:11+0000
 src MAC: a8:1e:84:81:5a:77
 dst MAC: ff:ff:ff:ff:ff:ff
@@ -237,6 +243,7 @@ CLI input:<br>
 `sudo ./ipk-sniffer -i wlp2s0 --ndp`<br>
 Sniffer output:<br>
 ```
+type: ICMPv6 NDP
 timestamp: 2024-04-19T20:21:31+0000
 src MAC: 00:00:00:00:00:00
 dst MAC: 00:11:22:33:44:55
@@ -261,6 +268,7 @@ CLI input:<br>
 `sudo ./ipk-sniffer -i wlp2s0 --mld`<br>
 Sniffer output:<br>
 ```
+type: ICMPv6 MLD
 timestamp: 2024-04-19T20:25:53+0000
 src MAC: a8:1e:84:81:5a:77
 dst MAC: 33:33:00:00:00:01
@@ -288,7 +296,8 @@ Sniffer output:<br>
 ==55341== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
 ==55341== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
 ==55341== Command: ./ipk-sniffer -i wlp2s0 --mld
-==55341== 
+==55341==
+type: ICMPv6 MLD 
 timestamp: 2024-04-19T20:28:21+0000
 src MAC: a8:1e:84:81:5a:77
 dst MAC: 33:33:00:00:00:01
@@ -342,6 +351,9 @@ CLI output:<br>
 Argument error: Invalid argument
 ```
 
+## Features
+As a feature to required output from sniffer, type of captured packet is printed, so user will see what packet was captured in case of filtering multiple packet types.
+
 ## License
 This code is licensed under the GNU General Public License v3.0. For more information, see the LICENSE file in the root directory of the project.
 
@@ -354,7 +366,7 @@ The whole program is documented using Doxygen annotations. Documentation can be 
 2. Programming with PCAP, Carstens T. [online]. Available at: https://www.tcpdump.org/pcap.html
 3. Project 2 - ZETA: Network sniffer [online]. Available at: https://git.fit.vutbr.cz/NESFIT/IPK-Projects-2024/src/branch/master/Project%202/zeta
 4. Develop a Packet Sniffer with Libpcap [online]. Available at: https://vichargrave.github.io/programming/develop-a-packet-sniffer-with-libpcap/
-5. Basic Python tests for IPK 2nd project - Sniffer, Jakub Jerabek.Available at: https://git.fit.vutbr.cz/xjerab28/IPK-Sniffer-Tests
+5. Basic Python tests for IPK 2nd project - Sniffer, Jakub Jerabek. Available at: https://git.fit.vutbr.cz/xjerab28/IPK-Sniffer-Tests
 
 
 [1]: https://www.geeksforgeeks.org/difference-between-segments-packets-and-frames/
